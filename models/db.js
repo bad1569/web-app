@@ -1,74 +1,22 @@
-const db = require('../db/db');  
-
-const getAllItems = (callback) => {
-    db.all('SELECT * FROM items', [], (err, rows) => {
-        if (err) {
-            console.error('Error fetching items:', err);
-            callback(err, null);
-        } else {
-            callback(null, rows);  
-        }
-    });
-};
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
 
-const addItem = (name, description, callback) => {
-    db.run('INSERT INTO items (name, description) VALUES (?, ?)', [name, description], function(err) {
-        if (err) {
-            console.error('Error inserting item:', err);
-            callback(err, null);
-        } else {
-            callback(null, { id: this.lastID, name, description });
-        }
-    });
-};
+const db = new sqlite3.Database(path.resolve(__dirname, '../db/database.sqlite'), (err) => {
+  if (err) console.error('Database connection error:', err);
+  else console.log('Connected to the SQLite database.');
+});
 
 
-const updateItem = (id, name, description, callback) => {
-    db.run('UPDATE items SET name = ?, description = ? WHERE id = ?', [name, description, id], function(err) {
-        if (err) {
-            console.error('Error updating item:', err);
-            callback(err, null);
-        } else {
-            callback(null, { id, name, description });
-        }
-    });
-};
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+});
 
-
-const patchItem = (id, updates, callback) => {
-    const updateFields = Object.keys(updates)
-        .map(field => `${field} = ?`)
-        .join(', ');
-    const values = [...Object.values(updates), id];
-
-    db.run(`UPDATE items SET ${updateFields} WHERE id = ?`, values, function(err) {
-        if (err) {
-            console.error('Error updating item:', err);
-            callback(err, null);
-        } else {
-            callback(null, { id, ...updates });
-        }
-    });
-};
-
-
-const deleteItem = (id, callback) => {
-    db.run('DELETE FROM items WHERE id = ?', [id], function(err) {
-        if (err) {
-            console.error('Error deleting item:', err);
-            callback(err, null);
-        } else {
-            callback(null, { id });
-        }
-    });
-};
-
-
-module.exports = {
-    getAllItems,
-    addItem,
-    updateItem,
-    patchItem,
-    deleteItem
-};
+module.exports = db;
