@@ -1,6 +1,5 @@
 const db = require('../db/db');  
 
-// Get all items from the database
 const getAllItems = (callback) => {
     db.all('SELECT * FROM items', [], (err, rows) => {
         if (err) {
