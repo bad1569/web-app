@@ -1,10 +1,11 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-
-
 const db = new sqlite3.Database(path.resolve(__dirname, '../db/database.sqlite'), (err) => {
-  if (err) console.error('Database connection error:', err);
-  else console.log('Connected to the SQLite database.');
+  if (err) {
+    console.error('Database connection error:', err);
+  } else {
+    console.log('Connected to the SQLite database.');
+  }
 });
 
 
@@ -16,7 +17,11 @@ db.serialize(() => {
       description TEXT,
       date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-  `);
+  `, (err) => {
+    if (err) {
+      console.error("Error creating table:", err);
+    }
+  });
 });
 
 module.exports = db;
